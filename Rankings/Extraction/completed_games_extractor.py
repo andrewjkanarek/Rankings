@@ -1,4 +1,6 @@
-from game_raw import GameRaw
+from csv import reader
+
+import models.game_raw
 
 class CompletedGamesExtractor:
 
@@ -9,14 +11,15 @@ class CompletedGamesExtractor:
 
 		games_raw = []
 
-		# open file
-		with open(self.filepath, 'rb') as csvfile:
+		# Read the csv file containing game data
+		with open(self.filepath) as csvfile:
+			read_file = reader(csvfile)
+			games = list(read_file)
 
-			for count, line in enumerate(csvfile):
-				cols = line.split(',')
+			for row in games:
 
 				# initialize game with each row
-				game_raw = GameRaw(cols) 
+				game_raw = GameRaw(row) 
 
 				# validate 
 				game_raw.validate()
@@ -24,4 +27,5 @@ class CompletedGamesExtractor:
 				# add game to row to list of games
 				games_raw.append(game_raw.row_data)
 
-		return games_raw
+
+			return games_raw
