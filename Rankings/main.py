@@ -49,9 +49,5 @@ for index, row in games.iterrows():
 	is_neutral_game = row["Location"] is not None
 	api.insert_game(row["Season"], home_game_stats_id, away_game_stats_id, None, is_neutral_game, row["Date"])
 
-
-
-
-
 api.db.commit()
 

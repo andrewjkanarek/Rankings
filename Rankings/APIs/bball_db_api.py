@@ -71,8 +71,8 @@ class BballApi:
 		try:
 			query_template = """
 				INSERT INTO Games ( Season, HomeStatsId, AwayStatsId, PointSpread, IsNeutralFlag, Date ) 
-				VALUES ( {season}, {home_stats_id}, {away_stats_id}, {point_spread}, {is_neutral_flag}, {date} )"""
-			query = query_template.format(season=season, home_stats_id=home_stats_id, away_stats_id=away_stats_id, point_spread=point_spread, is_neutral_flag=is_neutral_flag, date=date)
+				VALUES ( {season}, {home_stats_id}, {away_stats_id}, NULL, {is_neutral_flag}, '{date}' )"""
+			query = query_template.format(season=season, home_stats_id=home_stats_id, away_stats_id=away_stats_id, is_neutral_flag=is_neutral_flag, date=date)
 			self.db.execute(query)
 			game_id = self.db.cursor.lastrowid
 
