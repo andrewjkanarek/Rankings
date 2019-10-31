@@ -18,9 +18,6 @@ games["AwayTeam"] = games["AwayTeam"].str.title().str.strip()
 # parse date format
 games["Date"] = pd.to_datetime(games["MonthDay"].str.cat(games["Year"].astype(str), sep=' '))
 
-# get the season
-# games[games["Date"].datetime.monthSeason"]
-
 # games in nov/dec 2018 are for the 2019 season, all other 2019 games are for 2019 season
 nov_dec_games = games["Date"].dt.month >= 11
 games.loc[nov_dec_games, "Season"] = games["Date"].dt.year + 1
@@ -40,7 +37,7 @@ for team_name in unique_teams:
 	teams[team_name] = team_id
 
 # insert game data into database
-for index, row in games.itterrows():
+for index, row in games.iterrows():
 	# check if the game exists in the database already
 	if (api.check_game_exists(teams[row["HomeTeam"]], teams[row["AwayTeam"]], row["Date"])):
 		continue
@@ -48,6 +45,7 @@ for index, row in games.itterrows():
 	home_game_stats_id = api.insert_team_game_stats(teams[row["HomeTeam"]], row["HomeScore"])
 	away_game_stats_id = api.insert_team_game_stats(teams[row["AwayTeam"]], row["AwayScore"])
 
+	print("Inserting game between {home_team} and {away_team} on {date}".format(home_team=row["HomeTeam"], away_team=row["AwayTeam"], date=str(row["Date"])))
 	is_neutral_game = row["Location"] is not None
 	api.insert_game(row["Season"], home_game_stats_id, away_game_stats_id, None, is_neutral_game, row["Date"])
 
