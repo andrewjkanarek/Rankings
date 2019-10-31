@@ -9,8 +9,6 @@ class BballApi:
 	def __init__(self):
 		self.db = BballDb()
 
-	# def __del__(self):
-	# 	self.db.disconnect()
 
 	def insert_raw_games(self, raw_games):
 
@@ -20,8 +18,6 @@ class BballApi:
 				columns = ', '.join(game.keys())
 				query = "INSERT INTO %s ( %s ) VALUES ( %s )" % ('GamesRaw', columns, placeholders)
 				self.db.insert_row(query, game.values())
-
-			sefl.db.commit()
 
 		except Error as e:
 			print('Error:', e)
@@ -48,10 +44,18 @@ class BballApi:
 			query = "INSERT INTO Teams ( Name ) VALUES ( '{name}' )".format(name=team_name)
 			self.db.execute(query)
 			teamid = self.db.cursor.lastrowid
-			self.db.commit()
 
 			return teamid
 
 		except Error as e:
 			print('Error:', e)
+
+	def check_game_exists(self, home_team_id, away_team_id, date):
+		pass
+
+	def insert_team_game_stats(self, team_id, points_scored):
+		pass
+
+	def insert_game(self, season, home_stats_id, away_stats_id, point_spread, is_neutral_flag, date):
+		pass
 
