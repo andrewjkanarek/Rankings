@@ -37,8 +37,7 @@ class BballDb:
 
 
 	def execute(self, query):
-		self.cursor.execute(query) 
-		return self.cursor.fetchone()
+		self.cursor.execute(query)
 
 	def insert_row(self, query, row):
 		self.cursor.execute(query, row) 

@@ -1,5 +1,6 @@
 import pymysql
 from pymysql import Error
+import pandas as pd
 
 from database.bballsql.db import BballDb
 
@@ -28,7 +29,8 @@ class BballApi:
 		try:
 			query_template = "SELECT * FROM bball.Teams WHERE name = '{team_name}' LIMIT 1"
 			query = query_template.format(team_name=team_name)
-			team = self.db.execute(query)
+			self.db.execute(query)
+			team = self.db.cursor.fetchone()
 
 			return team
 
@@ -45,6 +47,7 @@ class BballApi:
 			query_template = "INSERT INTO Teams ( Name ) VALUES ( '{name}' )"
 			query = query_template.format(name=team_name)
 			self.db.execute(query)
+			self.db.cursor.fetchone()
 			teamid = self.db.cursor.lastrowid
 
 			return teamid
@@ -53,7 +56,17 @@ class BballApi:
 			print('Error:', e)
 
 	def check_game_exists(self, home_team_id, away_team_id, date):
-		pass
+		try:
+			query_template = "CALL check_game_exists({home_id}, {away_id}, '{game_date}')"
+			query = query_template.format(home_id=home_team_id, away_id=away_team_id, game_date=date.strftime('%Y-%m-%d'))
+			self.db.execute(query)
+
+			# if any rows returned, game exists
+			result = self.db.cursor.rowcount
+			return result > 0
+		except Error as e:
+			print('Error:', e)
+			return True
 
 	def insert_team_game_stats(self, team_id, points_scored):
 		try:
@@ -80,4 +93,24 @@ class BballApi:
 
 		except Error as e:
 			print('Error:', e)
+
+	def create_game(self, home_team_id, away_team_id, game_row):
+		# check if the game exists in the database already, dont insert data if it does
+		if (self.check_game_exists(home_team_id, away_team_id, game_row["Date"])):
+			return
+
+		# insert game stats for each team
+		home_game_stats_id = self.insert_team_game_stats(home_team_id, game_row["HomeScore"])
+		away_game_stats_id = self.insert_team_game_stats(away_team_id, game_row["AwayScore"])
+
+		# insert Game row
+		print("Inserting game between {home_team} and {away_team} on {date}".format(home_team=game_row["HomeTeam"], away_team=game_row["AwayTeam"], date=game_row["Date"].strftime('%Y-%m-%d')))
+		is_neutral_game = isinstance(game_row["Location"], float) and np.isnan(game_row["Location"])
+		return self.insert_game(game_row["Season"], home_game_stats_id, away_game_stats_id, None, is_neutral_game, game_row["Date"])
+
+	def get_games_df(self, season, end_date):
+		query_template = """CALL get_all_games({season}, '{end_date}')"""
+		query = query_template.format(season=season, end_date=end_date)
+		return pd.read_sql_query(query, self.db.connection)
+
 

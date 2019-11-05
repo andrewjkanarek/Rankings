@@ -38,16 +38,9 @@ for team_name in unique_teams:
 
 # insert game data into database
 for index, row in games.iterrows():
-	# check if the game exists in the database already
-	if (api.check_game_exists(teams[row["HomeTeam"]], teams[row["AwayTeam"]], row["Date"])):
-		continue
-
-	home_game_stats_id = api.insert_team_game_stats(teams[row["HomeTeam"]], row["HomeScore"])
-	away_game_stats_id = api.insert_team_game_stats(teams[row["AwayTeam"]], row["AwayScore"])
-
-	print("Inserting game between {home_team} and {away_team} on {date}".format(home_team=row["HomeTeam"], away_team=row["AwayTeam"], date=str(row["Date"])))
-	is_neutral_game = row["Location"] is not None
-	api.insert_game(row["Season"], home_game_stats_id, away_game_stats_id, None, is_neutral_game, row["Date"])
+	home_team_id = teams[row["HomeTeam"]]
+	away_team_id = teams[row["AwayTeam"]]
+	api.create_game(home_team_id, away_team_id, row)
 
 api.db.commit()
 

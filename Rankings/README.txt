@@ -12,3 +12,8 @@ MongoDB (Atlas)
 https://cloud.mongodb.com/v2/5da4a3bed5ec130628a1f2c9#clusters
 connection string: mongodb+srv://admin:Gunnison30@cluster0-v4srx.mongodb.net/bballdb?ssl=true&ssl_cert_reqs=CERT_NONE&retryWrites=true&w=majority
 connect with mongo shell: mongo "mongodb+srv://cluster0-v4srx.mongodb.net/bballdb" --username admin
+
+FILES
+
+csv_etl.py - used to upload game data in csv file, transform data and load into database
+rankings.py - used to read game data from database and rank teams
