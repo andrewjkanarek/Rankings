@@ -21,8 +21,7 @@ def get_teams(games):
 
 	return teams
 
-def update_scores(games, teams, x):
-	# print(teams.loc["Name", "NumWins"])
+def update_scores(games, teams, x, home_adv_weight):
 	teams_updated = teams.copy()
 
 	# update score for each team
@@ -37,21 +36,44 @@ def update_scores(games, teams, x):
 		sub = 0
 
 		# iterate through games won
-		for opponent_name in team_wins["Loser"]:
-			opponent = teams.loc[opponent_name]
-			add += opponent["Score"] / opponent["NumLosses"]
+		for index, game in team_wins.iterrows():
+			opponent = teams.loc[game["Loser"]]
+			score = opponent["Score"]
+
+			# update weight based on homefield advantage
+			if home_adv_weight > 0 and home_adv_weight < 1:
+				# if game was home, easier win, not as signficant
+				if (game["Location"] == "Home"):
+					score *= (1 - home_adv_weight)
+				# if away win, more difficult win
+				else:
+					score *= home_adv_weight
+
+			add += score / opponent["NumLosses"]
+
 
 		# iterate through games lost
-		for opponent_name in team_losses["Winner"]:
-			opponent = teams.loc[opponent_name]
-			sub += (1 - opponent["Score"]) / opponent["NumWins"]
+		for index, game in team_losses.iterrows():
+			opponent = teams.loc[game["Winner"]]
+			score = opponent["Score"]
+
+			# update weight based on homefield advantage
+			if home_adv_weight > 0 and home_adv_weight < 1:
+				# if game was away, not as bad of a loss
+				if (game["Location"] == "Home"):
+					score *= home_adv_weight
+				# if home loss, it is a worse loss
+				else:
+					score *= (1 - home_adv_weight)
+
+			sub += (1 - score) / opponent["NumWins"]
 
 		curr_sum = add - sub
 		curr_sum *= damp
 		curr_sum += x
 		teams_updated.loc[team_name, "Score"] = curr_sum
 
-	return teams_updated.copy()
+	return teams_updated
 
 
 
@@ -69,15 +91,24 @@ def normalize_scores(teams):
 
 	return teams
 
-def predict(games, teams, start_date, end_date):
+def predict(games, teams, start_date, end_date, home_adv_weight):
 
 	right = 0
 	wrong = 0
 	for index, game in games.iterrows():
-		winner = teams.loc[game["Winner"]]
-		loser = teams.loc[game["Loser"]]
+		winner_score = teams.loc[game["Winner"]]["Score"]
+		loser_score = teams.loc[game["Loser"]]["Score"]
 
-		if (winner["Score"] > loser["Score"]):
+		if home_adv_weight > 0 and home_adv_weight < 1:
+			if game["Location"] == "Home":
+				winner_score *= home_adv_weight
+				loser_score *= (1 - home_adv_weight)
+			else:
+				winner_score *= (1 - home_adv_weight)
+				loser_score *= home_adv_weight
+			
+
+		if (winner_score > loser_score):
 			right += 1
 		else:
 			wrong += 1
@@ -95,33 +126,26 @@ start_date = '2016-03-01'
 end_date = '2017-03-01'
 games = api.get_games_df(season, end_date)
 
-# initialize scores with win %
-
+# initialize teams DF with wins/losses and initial score 
 teams = get_teams(games)
-
 print(teams.sort_values('Score', ascending=False).head(10))
-
-predict(games, teams, None, None)
+predict(games, teams, None, None, 1)
 
 # update scores with pagerank
 
 x = (1 - damp) / teams.shape[0]
 
-teams = update_scores(games, teams, x)
-
+teams = update_scores(games, teams, x, 1)
 teams = normalize_scores(teams)
-
 print(teams.sort_values('Score', ascending=False).head(10))
+predict(games, teams, None, None, 1)
 
-predict(games, teams, None, None)
-
-teams = update_scores(games, teams, x)
-
+teams = update_scores(games, teams, x, 1)
 teams = normalize_scores(teams)
-
 print(teams.sort_values('Score', ascending=False).head(10))
+predict(games, teams, None, None, 1)
 
-predict(games, teams, None, None)
+
 
 
 

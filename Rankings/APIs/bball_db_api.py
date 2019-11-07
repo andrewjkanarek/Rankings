@@ -1,5 +1,6 @@
 import pymysql
 from pymysql import Error
+import numpy as np
 import pandas as pd
 
 from database.bballsql.db import BballDb
@@ -105,8 +106,7 @@ class BballApi:
 
 		# insert Game row
 		print("Inserting game between {home_team} and {away_team} on {date}".format(home_team=game_row["HomeTeam"], away_team=game_row["AwayTeam"], date=game_row["Date"].strftime('%Y-%m-%d')))
-		is_neutral_game = isinstance(game_row["Location"], float) and np.isnan(game_row["Location"])
-		return self.insert_game(game_row["Season"], home_game_stats_id, away_game_stats_id, None, is_neutral_game, game_row["Date"])
+		return self.insert_game(game_row["Season"], home_game_stats_id, away_game_stats_id, None, game_row["IsNeutral"], game_row["Date"])
 
 	def get_games_df(self, season, end_date):
 		query_template = """CALL get_all_games({season}, '{end_date}')"""
